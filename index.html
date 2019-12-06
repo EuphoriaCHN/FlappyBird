@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0,   -scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        #game {
+            width: 800px;
+            height: 600px;
+            background: url("images/sky.png");
+            position: relative;
+            overflow: hidden;
+        }
+
+        #bird {
+            width: 34px;
+            height: 25px;
+            background: url("images/birds.png") -10px -8px no-repeat;
+            position: absolute;
+            top: 100px;
+            left: 100px;
+        }
+    </style>
+</head>
+<body>
+<div id="game">
+    <div id="bird"></div>
+</div>
+<script>
+    'use strict';
+
+    // 让小鸟飞起来 = 水平移动背景 + 竖直移动小鸟
+    let game = document.getElementById('game');
+    let birdElement = document.getElementById('bird');
+    let gameStatus = null;
+
+    // 初始化背景图的值
+    let sky = {
+        x: 0,
+    };
+
+    // 初始化小鸟
+    let bird = {
+        speedX: 5,
+        speedY: 5,
+        y: birdElement.offsetTop,
+        x: birdElement.offsetLeft,
+        timer: null
+    };
+
+    // 小鸟的精灵图
+    let birdFlyPictures = {
+        index: 0,
+        step: 1,
+        data: [
+            [-8, -11],
+            [-60, -11],
+            [-113, -11]
+        ]
+    };
+
+    gameStatus = window.setInterval(() => {
+        // 移动背景
+        sky.x -= bird.speedX;
+        game.style.backgroundPositionX = sky.x + 'px';
+
+        // 移动小鸟
+        bird.y += bird.speedY;
+        bird.speedY += 1;
+        birdElement.style.top = bird.y + 'px';
+
+        if (birdElement.offsetTop <= 0 || birdElement.offsetTop >= 575) {
+            birdElement.style.top = 575 + 'px';
+            window.clearInterval(gameStatus);
+            gameStatus = null;
+        }
+    }, 30);
+
+    // 点击文档，让小鸟往上飞
+    document.body.addEventListener('click', ev => {
+        bird.speedY = -15;
+    });
+
+    // 创建管道
+    let createPipe = position => {
+        let pipe = {};
+        pipe.x = position;
+        pipe.topPipeHeight = 100 + parseInt(Math.random() * 200);
+        pipe.bottomPipeHeight = 600 - pipe.topPipeHeight - 200;
+        pipe.bottomPipeTop = pipe.topPipeHeight + 200;
+        pipe.timer = null;
+
+        // 上方的管道
+        let topPipe = document.createElement('div');
+        topPipe.style.width = '52px';
+        topPipe.style.height = pipe.topPipeHeight + 'px';
+        topPipe.style.background = 'url("images/pipe2.png") no-repeat center bottom';
+        topPipe.style.position = 'absolute';
+        topPipe.style.top = '0';
+        topPipe.style.left = pipe.x + 'px';
+        game.appendChild(topPipe);
+
+        // 下方的管道
+        let bottomPipe = document.createElement('div');
+        bottomPipe.style.width = '52px';
+        bottomPipe.style.height = pipe.bottomPipeHeight + 'px';
+        bottomPipe.style.background = 'url("images/pipe1.png") no-repeat center top';
+        bottomPipe.style.position = 'absolute';
+        bottomPipe.style.top = pipe.bottomPipeTop + 'px';
+        bottomPipe.style.left = pipe.x + 'px';
+        game.appendChild(bottomPipe);
+
+        // 令这一对管道运动起来
+        pipe.timer = window.setInterval(() => {
+            if (gameStatus === null) {
+                window.clearInterval(pipe.timer);
+            }
+            pipe.x -= 2;
+            topPipe.style.left = pipe.x + 'px';
+            bottomPipe.style.left = pipe.x + 'px';
+            if (pipe.x < -52) {
+                pipe.topPipeHeight = 100 + parseInt(Math.random() * 200);
+                pipe.bottomPipeHeight = 600 - pipe.topPipeHeight - 200;
+                pipe.bottomPipeTop = pipe.topPipeHeight + 200;
+
+                topPipe.style.height = pipe.topPipeHeight + 'px';
+                bottomPipe.style.height = pipe.bottomPipeHeight + 'px';
+
+                bottomPipe.style.top = pipe.bottomPipeTop + 'px';
+
+                pipe.x = 1000;
+            }
+
+            let topPipeHitCheck = bird.x + 34 > pipe.x && bird.x < pipe.x + 52 && bird.y < pipe.topPipeHeight;
+            let bottomPipeHitCheck = bird.x + 34 > pipe.x && bird.x < pipe.x + 52 && bird.y > pipe.bottomPipeTop;
+
+            if (topPipeHitCheck || bottomPipeHitCheck) {
+                window.clearInterval(pipe.timer);
+                window.clearInterval(gameStatus);
+                gameStatus = null;
+            }
+        }, 30);
+    };
+
+    createPipe(400);
+    createPipe(600);
+    createPipe(800);
+    createPipe(1000);
+    createPipe(1200);
+
+    // 让鸟动起来
+    bird.timer = window.setInterval(() => {
+        if (gameStatus === null) {
+            window.clearInterval(bird.timer);
+        }
+        birdFlyPictures.index += birdFlyPictures.step;
+        if (birdFlyPictures.index === 0 || birdFlyPictures.index === birdFlyPictures.data.length - 1) {
+            birdFlyPictures.step = -birdFlyPictures.step;
+        }
+        birdElement.style.backgroundPositionX = birdFlyPictures.data[birdFlyPictures.index][0] + 'px';
+        birdElement.style.backgroundPositionY = birdFlyPictures.data[birdFlyPictures.index][1] + 'px';
+    }, 150);
+</script>
+</body>
+</html>
